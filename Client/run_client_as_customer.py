@@ -1,6 +1,6 @@
 from tcp_client import Client
 
-server_address = ('', 59590)
+server_address = ('51.142.79.26', 59590)
 
 client = Client(server_address)
 client.find_host()

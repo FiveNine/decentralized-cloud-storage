@@ -8,7 +8,7 @@ class Client:
     def __init__(self, server_address : tuple[str, int]) -> socket.socket:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        # self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         self.sock.bind(('0.0.0.0', 59590))
 
         self.relay_server_address = server_address
@@ -18,7 +18,7 @@ class Client:
         print(f"Accepting connection on port 59590.")
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         sock.bind(('0.0.0.0', 59590))
         sock.listen(1)
         sock.settimeout(5)
@@ -37,7 +37,7 @@ class Client:
         print(f"Connecting from {('0.0.0.0', 59590)} to {address}.")
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         sock.bind(('0.0.0.0', 59590))
 
         connection_established = False
