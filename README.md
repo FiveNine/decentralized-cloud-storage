@@ -1,4 +1,10 @@
 ﻿# Decentralized Cloud Storage
+## Prerequisites
+-   Python 3.10.0+
+-   [Pickle](https://pypi.org/project/pickle5/)
+```
+pip install pickle
+```
 
 ## How To Run
 1.  Clone this repository:
