@@ -3,7 +3,7 @@
 ## How To Run
 1.  Clone this repository:
 ```
-gh repo clone FiveNine/decentralized-cloud-storage
+git clone https://github.com/FiveNine/decentralized-cloud-storage.git
 ```
 2.  Transfer these files to a relay server with a static public IPv4 address.
     - [run_relay_server.py](/Server/run_relay_server.py)
