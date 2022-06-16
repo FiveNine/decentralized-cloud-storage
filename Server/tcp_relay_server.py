@@ -7,54 +7,58 @@ class RelayServer:
 
     def __init__(self) -> socket.socket:
         self.queue_of_hosts = Queue()
-
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        self.sock.bind(('0.0.0.0', 59590))
+        
+        self.threads = []
 
         self.STOP_ACCEPTING_CONNECTIONS = threading.Event()
         self.STOP_ACCEPTING_CONNECTIONS.clear()
 
-    def __accept(self) -> None:
-        print(f"Accepting connections on port 59590.")
-        while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
-            self.sock.settimeout(5)
-            try:
-                self.sock, address = self.sock.accept()
-            except socket.timeout:
-                continue
-            self.sock.settimeout(None)
-
-            print(f"Connection established with {address}.")
-
-            choice = self.receive_message()
-            if choice == "Host":
-                print(f"Host {address} added to list of hosts.")
-                self.queue_of_hosts.put(address)
-            elif choice == "Client":
-                print(f"Client {address} requires a host.")
-                self.send_message(self.queue_of_hosts.get())
+    def __accept(self, sock: socket.socket, address: tuple[str, int]) -> None:
+        choice = self.receive_message(sock)
+        if choice == "Host":
+            print(f"Host {address} added to list of hosts.")
+            self.queue_of_hosts.put(address)
+        elif choice == "Client":
+            print(f"Client {address} requires a host.")
+            if self.queue_of_hosts.qsize() == 0:
+                self.queue_of_hosts.not_empty.wait_for(lambda: self.queue_of_hosts.qsize() > 0)
+            self.send_message(self.queue_of_hosts.get())
 
     def start_server(self):
         self.sock.listen(5)
         print(25*"=" + "Server has started!" + 25*"=")
-        accept_thread = threading.Thread(target=self.__accept)
-        accept_thread.start()
+        print(f"Accepting connections on port 59590.")
+
+        while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(('0.0.0.0', 59590))
+
+            sock.settimeout(5)
+            try:
+                sock, address = sock.accept()
+            except socket.timeout:
+                continue
+            else:
+                sock.settimeout(None)
+                print(f"Connection established with {address}.")
+                accept_thread = threading.Thread(target=self.__accept, args=(sock, address,))
+                accept_thread.start()
+                self.threads.append(accept_thread)
         
     def stop_server(self):
         self.STOP_ACCEPTING_CONNECTIONS.set()
         self.sock.close()
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, sock: socket.socket, message: str) -> None:
         raw_data = message.encode('utf-8')
         data_length = len(raw_data).to_bytes(4, byteorder='big')
 
-        self.sock.sendall(data_length)
-        self.sock.sendall(raw_data)
+        sock.sendall(data_length)
+        sock.sendall(raw_data)
 
-    def receive_message(self) -> str:
-        data_length = self.sock.recv(4)
+    def receive_message(self, sock: socket.socket) -> str:
+        data_length = sock.recv(4)
         data_length = int.from_bytes(data_length, byteorder='big')
 
         # receive message with a buffer of 4KB
@@ -62,7 +66,7 @@ class RelayServer:
         received_bytes = 0
         while received_bytes < data_length:
             remaining = data_length - received_bytes
-            message.extend(self.sock.recv(remaining if remaining < 4096 else 4096))
+            message.extend(sock.recv(remaining if remaining < 4096 else 4096))
             received_bytes = len(message)
 
         return message.decode('utf-8')
