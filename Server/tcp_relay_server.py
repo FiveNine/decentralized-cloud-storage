@@ -1,4 +1,4 @@
-import Utilities.utility_methods
+import Utilities.utility_methods as utils
 import socket, threading
 from queue import Queue
 from typing import TypeVar
