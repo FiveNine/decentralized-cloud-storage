@@ -1,3 +1,4 @@
+from ast import arg
 import socket, threading
 from queue import Queue
 from typing import TypeVar
@@ -8,27 +9,14 @@ class RelayServer:
     def __init__(self) -> socket.socket:
         self.queue_of_hosts = Queue()
         
-        self.threads = []
+        self.main_threads: list[threading.Thread] = []
+        self.accept_threads: list[threading.Thread] = []
 
         self.STOP_ACCEPTING_CONNECTIONS = threading.Event()
         self.STOP_ACCEPTING_CONNECTIONS.clear()
 
-    def __accept(self, sock: socket.socket, address: tuple[str, int]) -> None:
-        choice = self.receive_message(sock)
-        if choice == "Host":
-            print(f"Host {address} added to list of hosts.")
-            self.queue_of_hosts.put(address)
-        elif choice == "Client":
-            print(f"Client {address} requires a host.")
-            if self.queue_of_hosts.qsize() == 0:
-                self.queue_of_hosts.not_empty.wait_for(lambda: self.queue_of_hosts.qsize() > 0)
-            self.send_message(self.queue_of_hosts.get())
-
-    def start_server(self):
-        self.sock.listen(5)
-        print(25*"=" + "Server has started!" + 25*"=")
-        print(f"Accepting connections on port 59590.")
-
+    def __accept_connections(self):
+        connected_sockets: list[socket.socket] = []
         while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -42,13 +30,37 @@ class RelayServer:
             else:
                 sock.settimeout(None)
                 print(f"Connection established with {address}.")
-                accept_thread = threading.Thread(target=self.__accept, args=(sock, address,))
+                accept_thread = threading.Thread(target=self.__handle_client, args=(sock, address,))
                 accept_thread.start()
-                self.threads.append(accept_thread)
+                self.accept_threads.append(accept_thread)
+                connected_sockets.append(sock)
+        if self.STOP_ACCEPTING_CONNECTIONS.is_set():
+            for sock in connected_sockets:
+                sock.close()
+
+    def __handle_client(self, sock: socket.socket, address: tuple[str, int]) -> None:
+        choice = self.receive_message(sock)
+        if choice == "Host":
+            print(f"Host {address} added to list of hosts.")
+            self.queue_of_hosts.put(address)
+        elif choice == "Client":
+            print(f"Client {address} requires a host.")
+            if self.queue_of_hosts.qsize() == 0:
+                self.queue_of_hosts.not_empty.wait_for(lambda: self.queue_of_hosts.qsize() > 0)
+            self.send_message(self.queue_of_hosts.get())
         
+    def start_server(self):
+        print(25*"=" + "Server has started!" + 25*"=")
+        print(f"Accepting connections on port 59590.")
+
+        listen_thread = threading.Thread(target=self.__accept_connections)
+        listen_thread.start()
+        self.main_threads.append(listen_thread)
+
     def stop_server(self):
         self.STOP_ACCEPTING_CONNECTIONS.set()
-        self.sock.close()
+        print(25*"=" + "Server has stopped." + 25*"=")
+        
 
     def send_message(self, sock: socket.socket, message: str) -> None:
         raw_data = message.encode('utf-8')
