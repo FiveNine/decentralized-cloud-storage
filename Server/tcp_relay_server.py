@@ -16,14 +16,16 @@ class RelayServer:
         self.STOP_ACCEPTING_CONNECTIONS.clear()
 
     def __accept_connections(self):
+        print(f"Accepting connections on port 59590.")
         connected_sockets: list[socket.socket] = []
         while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
+            print(len(connected_sockets))
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(('0.0.0.0', 59590))
 
-            sock.settimeout(5)
             try:
+                sock.settimeout(5)
                 sock, address = sock.accept()
             except socket.timeout:
                 continue
@@ -51,8 +53,7 @@ class RelayServer:
         
     def start_server(self):
         print(25*"=" + "Server has started!" + 25*"=")
-        print(f"Accepting connections on port 59590.")
-
+        
         listen_thread = threading.Thread(target=self.__accept_connections)
         listen_thread.start()
         self.main_threads.append(listen_thread)

@@ -42,12 +42,14 @@ class Client:
         connection_established = False
         while not connection_established:
             try:
+                sock.settimeout(3)
                 sock.connect(address)
-            except socket.error:
+            except (socket.error, socket.timeout):
                 continue
             else:
                 print("Connection Established!")
                 connection_established = True
+                sock.settimeout(None)
                 return sock
     
     def join_queue(self) -> None:
