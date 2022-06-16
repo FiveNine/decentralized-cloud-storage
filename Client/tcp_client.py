@@ -1,5 +1,5 @@
-import socket
-# from utils import *
+import socket, time
+import utils
 from typing import TypeVar
 Any = TypeVar('Any')
 
@@ -39,34 +39,45 @@ class Client:
         # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         sock.bind(('0.0.0.0', 59590))
 
-        connection_established = False
-        while not connection_established:
+        while True:
             try:
                 sock.settimeout(3)
                 sock.connect(address)
-            except (socket.error, socket.timeout):
+            except (socket.error, socket.timeout) as e:
+                print(e)
+                if e == socket.error:
+                    time.sleep(3)
                 continue
             else:
                 print("Connection Established!")
-                connection_established = True
                 sock.settimeout(None)
                 return sock
     
     def join_queue(self) -> None:
         self.sock = self.__connect(self.relay_server_address)
-        # wait until relay server finds a client
         self.send_message("Host")
+
+        # wait until relay server finds a client
         other_address = self.receive_message()
+        other_address = utils.string_to_address(other_address)
+
         print(f"Server sent client: {other_address}")
         self.sock = self.__connect(other_address)
+
+        print("Will now receive message from other client.")
     
     def find_host(self) -> None:
         self.sock = self.__connect(self.relay_server_address)
-        # relay server finds appropriate host and sends address
         self.send_message("Client")
+
+        # relay server finds appropriate host and sends address
         other_address = self.receive_message(self.sock)
+        other_address = utils.string_to_address(other_address)
+
         print(f"Server sent client: {other_address}")
         self.sock = self.__connect(other_address)
+
+        print("Will now send message to other client.")
 
     def send_message(self, message: str) -> None:
         raw_data = message.encode('utf-8')

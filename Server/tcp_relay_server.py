@@ -1,4 +1,4 @@
-from ast import arg
+import utils
 import socket, threading
 from queue import Queue
 from typing import TypeVar
@@ -7,7 +7,7 @@ Any = TypeVar('Any')
 class RelayServer:
 
     def __init__(self) -> socket.socket:
-        self.queue_of_hosts = Queue()
+        self.queue_of_hosts: Queue[tuple[socket.socket, tuple[str, int]]] = Queue()
         
         self.main_threads: list[threading.Thread] = []
         self.accept_threads: list[threading.Thread] = []
@@ -19,15 +19,16 @@ class RelayServer:
         print(f"Accepting connections on port 59590.")
         connected_sockets: list[socket.socket] = []
         while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
-            print(len(connected_sockets))
+            print(f"Connected sockets: {len(connected_sockets)}")
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(('0.0.0.0', 59590))
 
+            sock.settimeout(3)
             try:
-                sock.settimeout(5)
                 sock, address = sock.accept()
-            except socket.timeout:
+            except Exception as e:
+                print(e)
                 continue
             else:
                 sock.settimeout(None)
@@ -36,20 +37,29 @@ class RelayServer:
                 accept_thread.start()
                 self.accept_threads.append(accept_thread)
                 connected_sockets.append(sock)
+
         if self.STOP_ACCEPTING_CONNECTIONS.is_set():
             for sock in connected_sockets:
                 sock.close()
 
     def __handle_client(self, sock: socket.socket, address: tuple[str, int]) -> None:
         choice = self.receive_message(sock)
+        print(f"Client chose {choice}")
         if choice == "Host":
             print(f"Host {address} added to list of hosts.")
-            self.queue_of_hosts.put(address)
+            self.queue_of_hosts.put((sock, address))
+
         elif choice == "Client":
             print(f"Client {address} requires a host.")
-            if self.queue_of_hosts.qsize() == 0:
-                self.queue_of_hosts.not_empty.wait_for(lambda: self.queue_of_hosts.qsize() > 0)
-            self.send_message(self.queue_of_hosts.get())
+            # wait for a host to be available
+            while self.queue_of_hosts.qsize() == 0:
+                pass
+            # exchange addresses
+            host_sock, host_address = self.queue_of_hosts.get()
+            address = utils.address_to_string(address)
+            host_address = utils.address_to_string(host_address)
+            self.send_message(host_sock, address)
+            self.send_message(sock, host_address)
         
     def start_server(self):
         print(25*"=" + "Server has started!" + 25*"=")
