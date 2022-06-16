@@ -6,7 +6,7 @@ def main():
         sock.listen(1)
 
         sock, address = sock.accept()
-        print(address + " connected.")
+        print(f"{address} connected.")
         print(sock.recv(1024).decode('utf-8'))
         sock.sendall("world".encode('utf-8'))
 
