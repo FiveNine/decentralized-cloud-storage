@@ -62,7 +62,7 @@ class RelayServer:
         received_bytes = 0
         while received_bytes < data_length:
             remaining = data_length - received_bytes
-            message.append(self.sock.recv(remaining if remaining < 4096 else 4096))
+            message.extend(self.sock.recv(remaining if remaining < 4096 else 4096))
             received_bytes = len(message)
 
         return message.decode('utf-8')

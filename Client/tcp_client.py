@@ -31,7 +31,7 @@ class Client:
                 print("Connection Accepted! This is host.")
                 self.CONNECTION_ESTABLISHED.set()
                 self.sock = connection
-                
+
     def __connect(self, address: tuple[str, int]) -> None:
         print(f"Connecting from {('0.0.0.0', 59590)} to {address}.")
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -82,7 +82,7 @@ class Client:
         received_bytes = 0
         while received_bytes < data_length:
             remaining = data_length - received_bytes
-            message.append(self.sock.recv(remaining if remaining < 4096 else 4096))
+            message.extend(self.sock.recv(remaining if remaining < 4096 else 4096))
             received_bytes = len(message)
 
         return message.decode('utf-8')
