@@ -1,4 +1,5 @@
-import os, math, AES
+import os, math
+import Utilities.AES as AES
 
 def divide_file(full_path: str) -> list[str]:
     full_path = os.path.abspath(full_path)
