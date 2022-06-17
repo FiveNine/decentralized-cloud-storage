@@ -21,8 +21,8 @@ class RelayServer:
         while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
             print(f"Connected sockets: {len(connected_sockets)}")
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(('0.0.0.0', 59590))
+            sock.listen(5)
 
             sock.settimeout(3)
             try:
