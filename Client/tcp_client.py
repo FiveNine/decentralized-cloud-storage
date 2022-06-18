@@ -5,11 +5,12 @@ from typing import TypeVar
 Any = TypeVar('Any')
 
 class Client:
-    def __init__(self, server_address : tuple[str, int]) -> socket.socket:
+    def __init__(self, server_address : tuple[str, int], port: int) -> socket.socket:
+        self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        self.sock.bind(('0.0.0.0', 59590))
+        self.sock.bind(('0.0.0.0', self.port))
 
         self.relay_server_address = server_address
 
@@ -34,11 +35,11 @@ class Client:
                 self.sock = connection
 
     def __connect(self, address: tuple[str, int]) -> None:
-        print(f"Connecting from {('0.0.0.0', 59590)} to {address}.")
+        print(f"Connecting from {('0.0.0.0', self.port)} to {address}.")
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        sock.bind(('0.0.0.0', 59590))
+        sock.bind(('0.0.0.0', self.port))
 
         while True:
             try:
