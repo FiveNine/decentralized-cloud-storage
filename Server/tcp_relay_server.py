@@ -43,7 +43,7 @@ class RelayServer:
 
     def __handle_client(self, sock: socket.socket, address: tuple[str, int]) -> None:
         choice = self.receive_message(sock)
-        print(f"Client chose {choice}")
+        print(f"{address} chose {choice}.")
         print(f"Choice Debug: len={len(choice)} type={type(choice)} isString={isinstance(choice, str)}")
         if choice == "Host":
             print(f"Host {address} added to list of hosts.")
