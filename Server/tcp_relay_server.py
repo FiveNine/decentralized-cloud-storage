@@ -19,7 +19,7 @@ class RelayServer:
         print(f"Accepting connections on port 59590.")
         connected_sockets: list[socket.socket] = []
         while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
-            # print(f"Connected sockets: {len(connected_sockets)}")
+            print(f"Connected sockets: {len(connected_sockets)}")
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('0.0.0.0', 59590))
             sock.listen(5)
@@ -27,8 +27,7 @@ class RelayServer:
             sock.settimeout(3)
             try:
                 sock, address = sock.accept()
-            except Exception as e:
-                print(e)
+            except Exception:
                 continue
             else:
                 sock.settimeout(None)
@@ -45,7 +44,6 @@ class RelayServer:
     def __handle_client(self, sock: socket.socket, address: tuple[str, int]) -> None:
         choice = self.receive_message(sock)
         print(f"Client chose {choice}")
-        print()
         if choice == "Host":
             print(f"Host {address} added to list of hosts.")
             self.queue_of_hosts.put((sock, address))
