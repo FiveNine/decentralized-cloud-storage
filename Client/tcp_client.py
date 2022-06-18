@@ -73,7 +73,7 @@ class Client:
         self.send_message("Client")
 
         # relay server finds appropriate host and sends address
-        other_address = self.receive_message(self.sock)
+        other_address = self.receive_message()
         other_address = utils.string_to_address(other_address)
 
         print(f"Server sent client: {other_address}")
