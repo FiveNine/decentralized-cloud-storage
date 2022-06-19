@@ -20,7 +20,7 @@ class RelayServer:
     def __accept_connections(self):
         print(f"Accepting connections on port 59590.")
         while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
-            print(f"Connected sockets: {len(self.connected_sockets)}")
+            print(f"Connected sockets: {len(self.connected_sockets)} Hosts: {self.queue_of_hosts.qsize()}")
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('0.0.0.0', 59590))
             sock.listen(5)
@@ -97,5 +97,4 @@ class RelayServer:
             remaining = data_length - received_bytes
             message.extend(sock.recv(remaining if remaining < 4096 else 4096))
             received_bytes = len(message)
-        print(f"Received message: {message}")
         return message.decode('utf-8')
