@@ -86,18 +86,17 @@ class Client:
     def send_message(self, message: str) -> None:
         raw_data = message.encode('utf-8')
         data_length = len(raw_data).to_bytes(4, byteorder='big')
-
+        print(f"Sending {len(raw_data)} bytes.")
         self.sock.sendall(data_length)
         self.sock.sendall(raw_data)
-        print(message == raw_data.decode('utf-8'))
-        print(len(message), len(raw_data.decode('utf-8')))
+        print(raw_data)
 
     def receive_message(self) -> str:
         data_length = self.sock.recv(4)
         data_length = int.from_bytes(data_length, byteorder='big')
 
         # receive message with a buffer of 4KB
-        message = bytearray(data_length)
+        message = bytearray()
         received_bytes = 0
         while received_bytes < data_length:
             remaining = data_length - received_bytes

@@ -85,13 +85,13 @@ class RelayServer:
     def receive_message(self, sock: socket.socket) -> str:
         data_length = sock.recv(4)
         data_length = int.from_bytes(data_length, byteorder='big')
-
+        print(f"Data length: {data_length}")
         # receive message with a buffer of 4KB
-        message = bytearray(data_length)
+        message = bytearray()
         received_bytes = 0
         while received_bytes < data_length:
             remaining = data_length - received_bytes
             message.extend(sock.recv(remaining if remaining < 4096 else 4096))
             received_bytes = len(message)
-
+        print(f"Received message: {message}")
         return message.decode('utf-8')
