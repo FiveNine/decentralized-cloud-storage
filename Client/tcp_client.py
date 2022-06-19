@@ -86,10 +86,8 @@ class Client:
     def send_message(self, message: str) -> None:
         raw_data = message.encode('utf-8')
         data_length = len(raw_data).to_bytes(4, byteorder='big')
-        print(f"Sending {len(raw_data)} bytes.")
         self.sock.sendall(data_length)
         self.sock.sendall(raw_data)
-        print(raw_data)
 
     def receive_message(self) -> str:
         data_length = self.sock.recv(4)

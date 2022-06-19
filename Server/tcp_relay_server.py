@@ -44,7 +44,6 @@ class RelayServer:
     def __handle_client(self, sock: socket.socket, address: tuple[str, int]) -> None:
         choice = self.receive_message(sock)
         print(f"{address} chose {choice}.")
-        print(f"Choice Debug: len={len(choice)} type={type(choice)} isString={isinstance(choice, str)}")
         if choice == "Host":
             print(f"Host {address} added to list of hosts.")
             self.queue_of_hosts.put((sock, address))
@@ -85,7 +84,6 @@ class RelayServer:
     def receive_message(self, sock: socket.socket) -> str:
         data_length = sock.recv(4)
         data_length = int.from_bytes(data_length, byteorder='big')
-        print(f"Data length: {data_length}")
         # receive message with a buffer of 4KB
         message = bytearray()
         received_bytes = 0
