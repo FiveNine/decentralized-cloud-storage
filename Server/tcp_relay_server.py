@@ -1,5 +1,5 @@
 import Utilities.utility_methods as utils
-import socket, threading
+import socket, threading, time
 from queue import Queue
 from typing import TypeVar
 Any = TypeVar('Any')
@@ -15,11 +15,12 @@ class RelayServer:
         self.STOP_ACCEPTING_CONNECTIONS = threading.Event()
         self.STOP_ACCEPTING_CONNECTIONS.clear()
 
+        self.connected_sockets: list[socket.socket] = []
+
     def __accept_connections(self):
         print(f"Accepting connections on port 59590.")
-        connected_sockets: list[socket.socket] = []
         while not self.STOP_ACCEPTING_CONNECTIONS.is_set():
-            print(f"Connected sockets: {len(connected_sockets)}")
+            print(f"Connected sockets: {len(self.connected_sockets)}")
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('0.0.0.0', 59590))
             sock.listen(5)
@@ -35,10 +36,10 @@ class RelayServer:
                 accept_thread = threading.Thread(target=self.__handle_client, args=(sock, address,))
                 accept_thread.start()
                 self.accept_threads.append(accept_thread)
-                connected_sockets.append(sock)
+                self.connected_sockets.append(sock)
 
         if self.STOP_ACCEPTING_CONNECTIONS.is_set():
-            for sock in connected_sockets:
+            for sock in self.connected_sockets:
                 sock.close()
 
     def __handle_client(self, sock: socket.socket, address: tuple[str, int]) -> None:
@@ -57,10 +58,15 @@ class RelayServer:
             host_sock, host_address = self.queue_of_hosts.get()
             address = utils.address_to_string(address)
             host_address = utils.address_to_string(host_address)
+
             self.send_message(host_sock, address)
-            print(f"Host {host_address} has received client {address}.")
             self.send_message(sock, host_address)
-            print(f"Client {address} has received host {host_address}.")
+
+            time.sleep(10)
+            host_sock.close()
+            sock.close()
+            self.connected_sockets.remove(host_sock)
+            self.connected_sockets.remove(sock)
         
     def start_server(self):
         print(25*"=" + "Server has started!" + 25*"=")
