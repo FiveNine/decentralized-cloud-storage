@@ -89,6 +89,7 @@ class Client:
 
         self.sock.sendall(data_length)
         self.sock.sendall(raw_data)
+        print(message.encode('utf-8') == message.decode('utf-8'))
 
     def receive_message(self) -> str:
         data_length = self.sock.recv(4)
