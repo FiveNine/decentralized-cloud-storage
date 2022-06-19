@@ -61,7 +61,6 @@ class Client:
 
         # wait until relay server finds a client
         other_address = self.receive_message()
-        print("--Server Sent a Message--")
         print(f"Server sent client: {other_address}")
 
         other_address = utils.string_to_address(other_address)
@@ -75,7 +74,6 @@ class Client:
 
         # relay server finds appropriate host and sends address
         other_address = self.receive_message()
-        print("--Server Sent a Message--")
         print(f"Server sent client: {other_address}")
 
         other_address = utils.string_to_address(other_address)
