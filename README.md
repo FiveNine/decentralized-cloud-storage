@@ -1,6 +1,10 @@
 ﻿# Decentralized Cloud Storage
 ## Prerequisites
 -   Python 3.10.0+
+-   Python Cryptography Library
+```
+    pip install cryptography
+```
 
 ## How To Run
 1.  Clone this repository:
