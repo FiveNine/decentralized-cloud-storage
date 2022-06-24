@@ -3,7 +3,7 @@
 -   Python 3.10.0+
 -   Python Cryptography Library
 ```
-    pip install cryptography
+pip install cryptography
 ```
 
 ## How To Run
